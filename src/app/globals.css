@@ -1,26 +1,91 @@
 @import "tailwindcss";
 
+/* Variáveis CSS personalizadas */
 :root {
+  /* Cores principais */
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --secondary: #64748b;
+  --accent: #10b981;
+
+  /* Cores de fundo */
   --background: #ffffff;
-  --foreground: #171717;
+  --background-secondary: #f8fafc;
+  --foreground: #1e293b;
+  --foreground-muted: #64748b;
+
+  /* Cores de borda */
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Modo escuro */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --primary: #60a5fa;
+    --primary-dark: #3b82f6;
+    --secondary: #94a3b8;
+    --accent: #34d399;
+
+    --background: #0f172a;
+    --background-secondary: #1e293b;
+    --foreground: #f8fafc;
+    --foreground-muted: #94a3b8;
+
+    --border: #334155;
+    --border-light: #475569;
   }
+}
+
+/* Estilos base */
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Utilitários personalizados */
+.text-muted {
+  color: var(--foreground-muted);
+}
+
+.bg-secondary {
+  background-color: var(--background-secondary);
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+/* Animações suaves */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Foco acessível */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-blue-500;
 }

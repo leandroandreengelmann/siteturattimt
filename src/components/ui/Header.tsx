@@ -144,16 +144,11 @@ export default function Header() {
           </div>
 
           {/* Ações do Usuário */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Busca Mobile */}
-            <button className="md:hidden p-3 sm:p-4 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md">
-              <MagnifyingGlassIcon className="w-6 h-6 sm:w-7 sm:h-7 stroke-2" />
-            </button>
-
+          <div className="flex items-center">
             {/* Menu Mobile */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-3 sm:p-4 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+              className="md:hidden p-2 text-gray-600 hover:text-blue-600 transition-all duration-200"
             >
               {isMobileMenuOpen ? (
                 <XMarkIcon className="w-6 h-6 sm:w-7 sm:h-7 stroke-2" />

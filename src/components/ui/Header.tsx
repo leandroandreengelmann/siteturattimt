@@ -116,7 +116,7 @@ export default function Header() {
   }, [searchQuery]);
 
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = () => {
       setShowSuggestions(false);
       setSelectedSuggestion(-1);
     };

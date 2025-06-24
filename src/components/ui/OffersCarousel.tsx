@@ -229,7 +229,7 @@ export default function OffersCarousel() {
       const translateX = currentIndex * cardWidth;
       trackRef.current.style.transform = `translateX(-${translateX}px)`;
     }
-  }, [currentIndex, cardWidth]);
+  }, [currentIndex, cardWidth, maxIndexLimitado]);
 
   const moveCarousel = (direction: "prev" | "next") => {
     let newIndex = currentIndex;

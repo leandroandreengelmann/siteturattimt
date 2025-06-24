@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import CountdownTimer from "./CountdownTimer";
 
@@ -81,6 +82,12 @@ const ajustarImagemNoCampo = () => {
   return "object-cover";
 };
 
+const abreviarNomeProduto = (nome: string): string => {
+  const palavras = nome.split(" ");
+  const primeiras4 = palavras.slice(0, 4);
+  return primeiras4.join(" ");
+};
+
 const useImageFit = () => {
   const [imageFits, setImageFits] = useState<{ [key: string]: string }>({});
 
@@ -108,16 +115,24 @@ export default function EletricosCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const { handleImageLoad, getImageFit } = useImageFit();
 
-  const cardWidth = 296;
-  const visibleCards = 4;
+  const cardWidth = 280;
+  const visibleCards = 5;
 
   const produtosDuplicados = React.useMemo(() => {
     if (produtos.length === 0) return [];
 
+    // Se temos poucos produtos (menos de 4), não duplicar
+    // Apenas mostrar os produtos reais
+    if (produtos.length < 4) {
+      return produtos;
+    }
+
+    // Só duplicar se temos produtos suficientes para justificar um carrossel infinito
     const minProdutos = visibleCards * 2;
     let produtosParaExibir = [...produtos];
 
@@ -155,7 +170,13 @@ export default function EletricosCarousel() {
   }, []);
 
   useEffect(() => {
-    if (!isAutoPlaying || produtosDuplicados.length <= visibleCards) return;
+    if (
+      !isAutoPlaying ||
+      produtos.length < 4 ||
+      produtosDuplicados.length <= visibleCards ||
+      isHovered
+    )
+      return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => {
@@ -164,15 +185,17 @@ export default function EletricosCarousel() {
         }
         return prevIndex + 1;
       });
-    }, 4000);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [
+    produtos.length,
     produtosDuplicados.length,
     isAutoPlaying,
     maxIndex,
     visibleCards,
     maxIndexLimitado,
+    isHovered,
   ]);
 
   useEffect(() => {
@@ -193,7 +216,7 @@ export default function EletricosCarousel() {
 
     setIsAutoPlaying(false);
     setCurrentIndex(newIndex);
-    setTimeout(() => setIsAutoPlaying(true), 8000);
+    setTimeout(() => setIsAutoPlaying(true), 6000);
   };
 
   if (isLoading || produtos.length === 0) {
@@ -205,39 +228,50 @@ export default function EletricosCarousel() {
       <div className="container mx-auto px-4">
         <div className="mb-8">
           <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 animate-fade-in">
-            Ferramentas Elétricas
+            ⚡ Ferramentas Elétricas
           </h2>
           <p className="text-gray-600 mt-2 animate-fade-in-delay">
-            {produtos.length} produtos especializados
+            {produtos.length} ferramentas profissionais para seus projetos
           </p>
         </div>
 
-        <div className="relative">
-          {produtosDuplicados.length > visibleCards && (
+        <div
+          className="relative"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {produtos.length >= 4 && produtosDuplicados.length > visibleCards && (
             <button
               onClick={() => moveCarousel("prev")}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 hover:border-blue-400 hover:shadow-lg transition-all duration-300 group animate-slide-in-left"
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-white hover:border-orange-400 hover:shadow-xl hover:scale-110 transition-all duration-300 group animate-slide-in-left opacity-80 hover:opacity-100"
               aria-label="Produtos anteriores"
             >
-              <ChevronLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
+              <ChevronLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-orange-600 group-hover:scale-110 transition-all duration-300" />
             </button>
           )}
 
-          {produtosDuplicados.length > visibleCards && (
+          {produtos.length >= 4 && produtosDuplicados.length > visibleCards && (
             <button
               onClick={() => moveCarousel("next")}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-20 w-12 h-12 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 hover:border-blue-400 hover:shadow-lg transition-all duration-300 group animate-slide-in-right"
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-20 w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-white hover:border-orange-400 hover:shadow-xl hover:scale-110 transition-all duration-300 group animate-slide-in-right opacity-80 hover:opacity-100"
               aria-label="Próximos produtos"
             >
-              <ChevronRightIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
+              <ChevronRightIcon className="w-6 h-6 text-gray-600 group-hover:text-orange-600 group-hover:scale-110 transition-all duration-300" />
             </button>
           )}
 
-          <div className="overflow-hidden rounded-lg">
+          <div className="overflow-hidden rounded-xl shadow-sm">
             <div
               ref={trackRef}
-              className="flex gap-6 transition-transform duration-300 ease-out"
-              style={{ width: `${produtosDuplicados.length * cardWidth}px` }}
+              className={`flex gap-5 transition-all duration-700 ease-in-out ${
+                produtos.length < 4 ? "justify-center" : ""
+              }`}
+              style={{
+                width:
+                  produtos.length < 4
+                    ? "auto"
+                    : `${produtosDuplicados.length * cardWidth}px`,
+              }}
             >
               {produtosDuplicados.map((produto, index) => {
                 const desconto =
@@ -252,18 +286,21 @@ export default function EletricosCarousel() {
                 return (
                   <div
                     key={`${produto.id}-${index}`}
-                    className={`flex-shrink-0 w-64 h-[520px] bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group cursor-pointer animate-fade-in-up flex flex-col`}
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className={`flex-shrink-0 h-[520px] bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 group cursor-pointer animate-fade-in-up flex flex-col relative before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:to-transparent hover:before:from-orange-500/5 hover:before:to-transparent before:transition-all before:duration-500`}
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                      width: "260px",
+                    }}
                   >
                     <div className="absolute top-3 left-3 z-10">
-                      <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
-                        ELÉTRICO
+                      <span className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                        ⚡ ELÉTRICO
                       </span>
                     </div>
 
                     {produto.voltagem && (
                       <div className="absolute top-3 right-3 z-10">
-                        <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                        <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-bounce-in">
                           {produto.voltagem}
                         </span>
                       </div>
@@ -271,42 +308,43 @@ export default function EletricosCarousel() {
 
                     {desconto > 0 && (
                       <div className="absolute top-12 right-3 z-10">
-                        <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                        <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-pulse-glow">
                           -{desconto}%
                         </span>
                       </div>
                     )}
 
-                    <div className="aspect-square bg-gray-50 relative overflow-hidden flex-shrink-0">
+                    <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex-shrink-0 group-hover:bg-gradient-to-br group-hover:from-orange-50 group-hover:to-orange-100 transition-all duration-500">
                       <img
                         src={construirUrlImagem(produto.imagem_principal)}
                         alt={produto.nome}
                         className={`w-full h-full ${getImageFit(
                           produto.id
-                        )} transition-all duration-300`}
+                        )} transition-all duration-500 group-hover:scale-105`}
                         onLoad={(e) => handleImageLoad(e, produto.id)}
                         onError={(e) => {
                           e.currentTarget.src = createPlaceholderDataUrl();
                         }}
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                     </div>
 
-                    <div className="p-4 relative flex-1 flex flex-col min-h-0">
+                    <div className="p-4 relative flex-1 flex flex-col min-h-0 group-hover:bg-gradient-to-b group-hover:from-transparent group-hover:to-orange-50/30 transition-all duration-500">
                       <div>
-                        <h3 className="font-bold text-gray-900 mb-3 line-clamp-2 text-sm leading-tight min-h-[2.5rem] group-hover:text-blue-600 transition-colors duration-300">
-                          {produto.nome}
+                        <h3 className="font-bold text-gray-900 mb-3 line-clamp-2 text-sm leading-tight min-h-[2.5rem] group-hover:text-orange-700 transition-all duration-300 group-hover:scale-[1.02]">
+                          {abreviarNomeProduto(produto.nome)}
                         </h3>
 
                         <div className="space-y-2 min-h-[4.5rem]">
                           {produto.promocao_mes && produto.preco_promocao ? (
                             <>
-                              <div className="text-sm text-gray-500 line-through">
+                              <div className="text-sm text-gray-500 line-through transition-all duration-300 group-hover:text-gray-600">
                                 {formatarMoeda(produto.preco)}
                               </div>
-                              <div className="text-xl font-bold text-blue-600">
+                              <div className="text-xl font-bold text-orange-600 transition-all duration-300 group-hover:text-orange-700 group-hover:scale-105">
                                 {formatarMoeda(produto.preco_promocao)}
                               </div>
-                              <div className="text-sm font-semibold text-blue-500">
+                              <div className="text-sm font-semibold text-green-600 transition-all duration-300 group-hover:text-green-700">
                                 ↓ Economize{" "}
                                 {formatarMoeda(
                                   produto.preco - produto.preco_promocao
@@ -314,17 +352,9 @@ export default function EletricosCarousel() {
                               </div>
                             </>
                           ) : (
-                            <>
-                              <div className="text-sm text-transparent">
-                                R$ 00,00
-                              </div>
-                              <div className="text-xl font-bold text-gray-900">
-                                {formatarMoeda(produto.preco)}
-                              </div>
-                              <div className="text-sm text-transparent">
-                                ↓ Economize R$ 0,00
-                              </div>
-                            </>
+                            <div className="text-xl font-bold text-gray-900 transition-all duration-300 group-hover:text-orange-700 group-hover:scale-105">
+                              {formatarMoeda(produto.preco)}
+                            </div>
                           )}
                         </div>
 
@@ -342,16 +372,12 @@ export default function EletricosCarousel() {
                       </div>
 
                       <div className="mt-auto">
-                        <button
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-                          onClick={() => {
-                            console.log(
-                              `Ver produto: ${produto.nome} - ID: ${produto.id}`
-                            );
-                          }}
+                        <Link
+                          href={`/produtos/${produto.id}`}
+                          className="block w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm text-center"
                         >
                           Ver Produto
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -360,7 +386,7 @@ export default function EletricosCarousel() {
             </div>
           </div>
 
-          {produtosDuplicados.length > visibleCards && (
+          {produtos.length >= 4 && produtosDuplicados.length > visibleCards && (
             <div className="flex justify-center mt-8 space-x-2">
               {Array.from({ length: maxNavegacao }).map((_, index) => (
                 <button
@@ -368,11 +394,11 @@ export default function EletricosCarousel() {
                   onClick={() => {
                     setIsAutoPlaying(false);
                     setCurrentIndex(Math.min(index, maxIndexLimitado));
-                    setTimeout(() => setIsAutoPlaying(true), 8000);
+                    setTimeout(() => setIsAutoPlaying(true), 6000);
                   }}
                   className={`w-2 h-2 rounded-full transition-all duration-200 ${
                     index === currentIndex
-                      ? "bg-blue-600 scale-110"
+                      ? "bg-orange-600 scale-110"
                       : "bg-gray-300 hover:bg-gray-400"
                   }`}
                   aria-label={`Ir para grupo ${index + 1}`}
@@ -458,6 +484,20 @@ export default function EletricosCarousel() {
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .line-clamp-4 {
+          display: -webkit-box;
+          -webkit-line-clamp: 4;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         .select("*")
         .eq("ativo", true)
         .order("ordem", { ascending: true })
-        .order("created_at", { ascending: false });
+        .order("nome", { ascending: true });
 
       if (error) {
         console.error("Erro ao buscar categorias:", error);
@@ -65,7 +65,10 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      return NextResponse.json({ categorias: categorias || [] });
+      return NextResponse.json({
+        categorias,
+        total: categorias?.length || 0,
+      });
     }
   } catch (error) {
     console.error("Erro na API de categorias:", error);

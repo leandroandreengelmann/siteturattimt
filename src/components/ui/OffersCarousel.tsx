@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import CountdownTimer from "./CountdownTimer";
 
@@ -90,6 +91,31 @@ const ajustarImagemNoCampo = () => {
   return "object-cover";
 };
 
+const abreviarNomeProduto = (nome: string): string => {
+  const palavras = nome.split(" ");
+  const primeiras4 = palavras.slice(0, 4);
+  return primeiras4.join(" ");
+};
+
+const obterMesAtual = (): string => {
+  const meses = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+  const agora = new Date();
+  return meses[agora.getMonth()];
+};
+
 // Hook para gerenciar o ajuste dinâmico da imagem
 const useImageFit = () => {
   const [imageFits, setImageFits] = useState<{ [key: string]: string }>({});
@@ -118,13 +144,14 @@ export default function OffersCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const { handleImageLoad, getImageFit } = useImageFit();
 
-  // Largura do card + gap
-  const cardWidth = 296; // 256px card + 40px gap
-  const visibleCards = 4; // Quantos cards mostrar por vez
+  // Largura do card + gap para exatamente 5 produtos visíveis
+  const cardWidth = 280; // 260px card + 20px gap para caber exatamente 5
+  const visibleCards = 5; // Exatamente 5 cards por vez
 
   // Duplicar produtos se necessário para preencher o carrossel
   const produtosDuplicados = React.useMemo(() => {
@@ -170,7 +197,12 @@ export default function OffersCarousel() {
 
   // Auto-navegação infinita
   useEffect(() => {
-    if (!isAutoPlaying || produtosDuplicados.length <= visibleCards) return;
+    if (
+      !isAutoPlaying ||
+      produtosDuplicados.length <= visibleCards ||
+      isHovered
+    )
+      return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => {
@@ -180,12 +212,18 @@ export default function OffersCarousel() {
         }
         return prevIndex + 1;
       });
-    }, 4000); // Auto-navegação a cada 4 segundos
+    }, 3500); // Auto-navegação a cada 3.5 segundos (mais dinâmico)
 
     return () => clearInterval(interval);
-  }, [produtosDuplicados.length, isAutoPlaying, maxIndex, visibleCards]);
+  }, [
+    produtosDuplicados.length,
+    isAutoPlaying,
+    maxIndex,
+    visibleCards,
+    isHovered,
+  ]);
 
-  // Atualizar posição do carrossel
+  // Atualizar posição do carrossel com easing mais suave
   useEffect(() => {
     if (trackRef.current) {
       const translateX = currentIndex * cardWidth;
@@ -204,7 +242,7 @@ export default function OffersCarousel() {
 
     setIsAutoPlaying(false);
     setCurrentIndex(newIndex);
-    setTimeout(() => setIsAutoPlaying(true), 8000); // Retoma auto-play após 8s
+    setTimeout(() => setIsAutoPlaying(true), 6000); // Retoma auto-play após 6s
   };
 
   // Loading state
@@ -242,7 +280,8 @@ export default function OffersCarousel() {
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
-              Principais ofertas para você
+              Principais ofertas do mês de{" "}
+              <span className="text-blue-600">{obterMesAtual()}</span> para você
             </h2>
           </div>
           <div className="text-center py-16">
@@ -265,7 +304,8 @@ export default function OffersCarousel() {
         {/* Título */}
         <div className="mb-8">
           <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 animate-fade-in">
-            Principais ofertas para você
+            Principais ofertas do mês de{" "}
+            <span className="text-blue-600">{obterMesAtual()}</span> para você
           </h2>
           <p className="text-gray-600 mt-2 animate-fade-in-delay">
             {produtos.length} produtos em promoção especial
@@ -273,15 +313,19 @@ export default function OffersCarousel() {
         </div>
 
         {/* Carrossel Container */}
-        <div className="relative">
+        <div
+          className="relative"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           {/* Seta Esquerda */}
           {produtosDuplicados.length > visibleCards && (
             <button
               onClick={() => moveCarousel("prev")}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 hover:border-blue-400 hover:shadow-lg transition-all duration-300 group animate-slide-in-left"
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-white hover:border-blue-400 hover:shadow-xl hover:scale-110 transition-all duration-300 group animate-slide-in-left opacity-80 hover:opacity-100"
               aria-label="Produtos anteriores"
             >
-              <ChevronLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
+              <ChevronLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300" />
             </button>
           )}
 
@@ -289,18 +333,18 @@ export default function OffersCarousel() {
           {produtosDuplicados.length > visibleCards && (
             <button
               onClick={() => moveCarousel("next")}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-20 w-12 h-12 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50 hover:border-blue-400 hover:shadow-lg transition-all duration-300 group animate-slide-in-right"
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-20 w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-gray-300 rounded-full flex items-center justify-center hover:bg-white hover:border-blue-400 hover:shadow-xl hover:scale-110 transition-all duration-300 group animate-slide-in-right opacity-80 hover:opacity-100"
               aria-label="Próximos produtos"
             >
-              <ChevronRightIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 transition-colors duration-300" />
+              <ChevronRightIcon className="w-6 h-6 text-gray-600 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300" />
             </button>
           )}
 
           {/* Carrossel Track Container */}
-          <div className="overflow-hidden rounded-lg">
+          <div className="overflow-hidden rounded-xl shadow-sm">
             <div
               ref={trackRef}
-              className="flex gap-6 transition-transform duration-300 ease-out"
+              className="flex gap-5 transition-all duration-700 ease-in-out"
               style={{ width: `${produtosDuplicados.length * cardWidth}px` }}
             >
               {produtosDuplicados.map((produto, index) => {
@@ -316,40 +360,45 @@ export default function OffersCarousel() {
                 return (
                   <div
                     key={`${produto.id}-${index}`}
-                    className={`flex-shrink-0 w-64 h-[520px] bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group cursor-pointer animate-fade-in-up flex flex-col`}
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className={`flex-shrink-0 h-[520px] bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02] transition-all duration-500 group cursor-pointer animate-fade-in-up flex flex-col relative before:absolute before:inset-0 before:bg-gradient-to-t before:from-transparent before:to-transparent hover:before:from-blue-500/5 hover:before:to-transparent before:transition-all before:duration-500`}
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                      width: "260px",
+                    }}
                   >
                     {/* Badge de Desconto */}
                     {desconto > 0 && (
                       <div className="absolute top-3 right-3 z-10">
-                        <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                        <span className="bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-pulse">
                           -{desconto}%
                         </span>
                       </div>
                     )}
 
                     {/* Imagem do Produto */}
-                    <div className="aspect-square bg-gray-50 relative overflow-hidden flex-shrink-0">
+                    <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex-shrink-0 group-hover:bg-gradient-to-br group-hover:from-blue-50 group-hover:to-blue-100 transition-all duration-500">
                       <img
                         src={construirUrlImagem(produto.imagem_principal)}
                         alt={produto.nome}
                         className={`w-full h-full ${getImageFit(
                           produto.id
-                        )} transition-all duration-300`}
+                        )} transition-all duration-500 group-hover:scale-105`}
                         onLoad={(e) => handleImageLoad(e, produto.id)}
                         onError={(e) => {
                           e.currentTarget.src = createPlaceholderDataUrl();
                         }}
                       />
+                      {/* Overlay sutil no hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                     </div>
 
                     {/* Informações do Produto */}
-                    <div className="p-4 relative flex-1 flex flex-col min-h-0">
+                    <div className="p-4 relative flex-1 flex flex-col min-h-0 group-hover:bg-gradient-to-b group-hover:from-transparent group-hover:to-blue-50/30 transition-all duration-500">
                       {/* Conteúdo Superior */}
                       <div>
                         {/* Título */}
-                        <h3 className="font-bold text-gray-900 mb-3 line-clamp-2 text-sm leading-tight min-h-[2.5rem] group-hover:text-blue-600 transition-colors duration-300">
-                          {produto.nome}
+                        <h3 className="font-bold text-gray-900 mb-3 line-clamp-2 text-sm leading-tight min-h-[2.5rem] group-hover:text-blue-700 transition-all duration-300 group-hover:scale-[1.02]">
+                          {abreviarNomeProduto(produto.nome)}
                         </h3>
 
                         {/* Preços - Layout Padronizado */}
@@ -357,17 +406,17 @@ export default function OffersCarousel() {
                           {produto.promocao_mes && produto.preco_promocao ? (
                             <>
                               {/* Preço Antigo */}
-                              <div className="text-sm text-gray-500 line-through">
+                              <div className="text-sm text-gray-500 line-through transition-all duration-300 group-hover:text-gray-600">
                                 {formatarMoeda(produto.preco)}
                               </div>
 
                               {/* Preço Novo */}
-                              <div className="text-xl font-bold text-blue-600">
+                              <div className="text-xl font-bold text-blue-600 transition-all duration-300 group-hover:text-blue-700 group-hover:scale-105">
                                 {formatarMoeda(produto.preco_promocao)}
                               </div>
 
                               {/* Economia */}
-                              <div className="text-sm font-semibold text-blue-500">
+                              <div className="text-sm font-semibold text-green-600 transition-all duration-300 group-hover:text-green-700">
                                 ↓ Economize{" "}
                                 {formatarMoeda(
                                   produto.preco - produto.preco_promocao
@@ -375,22 +424,9 @@ export default function OffersCarousel() {
                               </div>
                             </>
                           ) : (
-                            <>
-                              {/* Espaçamento para manter altura consistente */}
-                              <div className="text-sm text-transparent">
-                                R$ 00,00
-                              </div>
-
-                              {/* Preço Normal */}
-                              <div className="text-xl font-bold text-gray-900">
-                                {formatarMoeda(produto.preco)}
-                              </div>
-
-                              {/* Espaçamento inferior */}
-                              <div className="text-sm text-transparent">
-                                ↓ Economize R$ 0,00
-                              </div>
-                            </>
+                            <div className="text-xl font-bold text-gray-900 transition-all duration-300 group-hover:text-blue-700 group-hover:scale-105">
+                              {formatarMoeda(produto.preco)}
+                            </div>
                           )}
                         </div>
 
@@ -410,17 +446,12 @@ export default function OffersCarousel() {
 
                       {/* Botão Ver Produto - sempre na parte inferior */}
                       <div className="mt-auto">
-                        <button
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-                          onClick={() => {
-                            // TODO: Implementar navegação para página do produto
-                            console.log(
-                              `Ver produto: ${produto.nome} - ID: ${produto.id}`
-                            );
-                          }}
+                        <Link
+                          href={`/produtos/${produto.id}`}
+                          className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm text-center"
                         >
                           Ver Produto
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -429,25 +460,25 @@ export default function OffersCarousel() {
             </div>
           </div>
 
-          {/* Indicadores de posição - máximo 9 */}
+          {/* Indicadores de posição */}
           {produtosDuplicados.length > visibleCards && (
-            <div className="flex justify-center mt-8 space-x-2">
-              {Array.from({ length: maxNavegacao }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setIsAutoPlaying(false);
-                    setCurrentIndex(Math.min(index, maxIndexLimitado));
-                    setTimeout(() => setIsAutoPlaying(true), 8000);
-                  }}
-                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                    index === currentIndex
-                      ? "bg-blue-600 scale-110"
-                      : "bg-gray-300 hover:bg-gray-400"
-                  }`}
-                  aria-label={`Ir para grupo ${index + 1}`}
-                />
-              ))}
+            <div className="flex justify-center mt-6 space-x-2">
+              {Array.from({ length: Math.min(maxNavegacao, 9) }).map(
+                (_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setIsAutoPlaying(false);
+                      setCurrentIndex(Math.min(index, maxIndexLimitado));
+                      setTimeout(() => setIsAutoPlaying(true), 6000);
+                    }}
+                    className={`carousel-indicator ${
+                      index === currentIndex ? "active" : ""
+                    }`}
+                    aria-label={`Ir para slide ${index + 1}`}
+                  />
+                )
+              )}
             </div>
           )}
         </div>

@@ -26,8 +26,11 @@ export default function CountdownTimer({
     seconds: 0,
   });
   const [isExpired, setIsExpired] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+
     const calculateTimeLeft = () => {
       const endTime = new Date(endDate).getTime();
       const now = new Date().getTime();
@@ -58,11 +61,6 @@ export default function CountdownTimer({
     return () => clearInterval(timer);
   }, [endDate]);
 
-  // Se a promoção já expirou, não mostrar o contador
-  if (isExpired) {
-    return null;
-  }
-
   // Estilos baseados no tamanho
   const sizeClasses = {
     small: {
@@ -83,6 +81,29 @@ export default function CountdownTimer({
   };
 
   const classes = sizeClasses[size];
+
+  // Evitar problemas de hidratação
+  if (!isMounted) {
+    return (
+      <div
+        className={`bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg ${classes.container} flex items-center justify-center gap-1 shadow-lg max-w-full overflow-hidden`}
+      >
+        <ClockIcon className={`${classes.icon} text-white flex-shrink-0`} />
+        <div
+          className={`${classes.text} text-white font-bold flex-1 text-center`}
+        >
+          <span className="font-mono font-black tracking-tight whitespace-nowrap">
+            00:00:00
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Se a promoção já expirou, não mostrar o contador
+  if (isExpired) {
+    return null;
+  }
 
   return (
     <div

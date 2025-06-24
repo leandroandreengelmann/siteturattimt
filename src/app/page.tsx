@@ -37,11 +37,11 @@ export default function Home() {
       {/* Produtos de Tinta */}
       <TintasCarousel />
 
-      {/* Novidades */}
-      <NovidadesCarousel />
-
       {/* Produtos Elétricos */}
       <EletricosCarousel />
+
+      {/* Novidades */}
+      <NovidadesCarousel />
 
       {/* Footer */}
       <Footer />

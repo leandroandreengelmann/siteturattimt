@@ -10,6 +10,9 @@ import {
   SparklesIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
+import type { Produto } from "@/lib/supabase";
+import LojaVendedorPopup from "@/components/ui/LojaVendedorPopup";
 
 interface Categoria {
   id: number;
@@ -39,6 +42,12 @@ export default function Header() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const [logo, setLogo] = useState<Logo | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [suggestions, setSuggestions] = useState<Produto[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState(-1);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -70,25 +79,97 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    setIsMounted(true);
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      if (typeof window !== "undefined") {
+        setIsScrolled(window.scrollY > 10);
+      }
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    const handler = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/produtos?busca=${encodeURIComponent(searchQuery)}&limit=5`
+        );
+        const data = await res.json();
+        setSuggestions(data.produtos || []);
+        setShowSuggestions(true);
+      } catch {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      setShowSuggestions(false);
+      setSelectedSuggestion(-1);
+    };
+    if (showSuggestions) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [showSuggestions]);
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedSuggestion((prev) => (prev + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedSuggestion(
+        (prev) => (prev - 1 + suggestions.length) % suggestions.length
+      );
+    } else if (e.key === "Enter") {
+      if (selectedSuggestion >= 0 && selectedSuggestion < suggestions.length) {
+        handleSuggestionClick(suggestions[selectedSuggestion]);
+      } else {
+        handleSearchSubmit();
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setSelectedSuggestion(-1);
+    }
+  };
+
+  const handleSuggestionClick = (produto: Produto) => {
+    setShowSuggestions(false);
+    setSearchQuery(produto.nome);
+    router.push(`/produtos/${produto.id}`);
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      setShowSuggestions(false);
+      router.push(`/produtos?busca=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      console.log("Buscar por:", searchQuery);
-    }
+    handleSearchSubmit();
   };
 
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled
+        isMounted && isScrolled
           ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200/50"
           : "bg-white shadow-md"
       }`}
@@ -130,7 +211,12 @@ export default function Header() {
                   type="text"
                   placeholder="Buscar produtos, ferramentas, tintas..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedSuggestion(-1);
+                  }}
+                  onFocus={() => searchQuery && setShowSuggestions(true)}
+                  onKeyDown={handleInputKeyDown}
                   className="relative w-full px-4 lg:px-6 py-3 lg:py-4 pr-14 lg:pr-16 text-sm bg-gray-50/80 border border-gray-200/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white transition-all duration-300 placeholder:text-gray-400"
                 />
                 <button
@@ -144,7 +230,14 @@ export default function Header() {
           </div>
 
           {/* Ações do Usuário */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {/* Botão Fale com um Especialista - Desktop */}
+            <button
+              onClick={() => setIsPopupOpen(true)}
+              className="hidden md:inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-xl transition-colors duration-200 shadow-lg text-sm"
+            >
+              Fale com um Especialista
+            </button>
             {/* Menu Mobile */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -168,7 +261,12 @@ export default function Header() {
                 type="text"
                 placeholder="Buscar produtos..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedSuggestion(-1);
+                }}
+                onFocus={() => searchQuery && setShowSuggestions(true)}
+                onKeyDown={handleInputKeyDown}
                 className="relative w-full px-4 sm:px-6 py-3 sm:py-4 pr-14 sm:pr-16 text-sm bg-gray-50/80 border border-gray-200/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white transition-all duration-300"
               />
               <button
@@ -179,6 +277,13 @@ export default function Header() {
               </button>
             </div>
           </form>
+          {/* Botão Fale com um Especialista - Mobile */}
+          <button
+            onClick={() => setIsPopupOpen(true)}
+            className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors duration-200 shadow-lg text-sm"
+          >
+            Fale com um Especialista
+          </button>
         </div>
       </div>
 
@@ -210,13 +315,7 @@ export default function Header() {
             <div className="h-6 w-px bg-gradient-to-b from-transparent via-gray-200 to-transparent ml-8"></div>
 
             <nav className="flex items-center space-x-3 ml-8">
-              {[
-                { href: "/", label: "Início" },
-                { href: "/produtos", label: "Produtos" },
-                { href: "/promocoes", label: "Promoções" },
-                { href: "/sobre", label: "Sobre" },
-                { href: "/contato", label: "Contato" },
-              ].map((item) => (
+              {[{ href: "/", label: "Início" }].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -247,15 +346,18 @@ export default function Header() {
                   )
                   .map((categoria) => (
                     <div key={categoria.id} className="space-y-5 group">
-                      <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wider pb-4 relative border-b border-gray-200">
+                      <Link
+                        href={`/categorias/${categoria.id}`}
+                        className="block font-bold text-gray-900 text-sm uppercase tracking-wider pb-4 relative border-b border-gray-200 hover:text-blue-600 transition-colors duration-300"
+                      >
                         <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-500"></div>
                         {categoria.nome}
-                      </h3>
+                      </Link>
                       <ul className="space-y-1">
                         {categoria.subcategorias!.map((subcategoria) => (
                           <li key={subcategoria.id}>
                             <Link
-                              href={`/produtos?categoria=${categoria.id}&subcategoria=${subcategoria.id}`}
+                              href={`/subcategorias/${subcategoria.id}`}
                               className="text-gray-600 hover:text-blue-600 text-sm transition-all duration-300 block py-2 px-3 rounded-lg hover:bg-gray-50/70 relative group"
                             >
                               <span className="relative z-10">
@@ -289,13 +391,7 @@ export default function Header() {
         <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gray-100 animate-in slide-in-from-top-2 duration-300 max-h-screen overflow-y-auto">
           <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
             <nav className="space-y-2 sm:space-y-3">
-              {[
-                { href: "/", label: "Início" },
-                { href: "/produtos", label: "Produtos" },
-                { href: "/promocoes", label: "Promoções" },
-                { href: "/sobre", label: "Sobre" },
-                { href: "/contato", label: "Contato" },
-              ].map((item) => (
+              {[{ href: "/", label: "Início" }].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -324,16 +420,20 @@ export default function Header() {
                       key={categoria.id}
                       className="bg-gray-50/50 rounded-xl p-4 sm:p-5"
                     >
-                      <p className="font-semibold text-gray-800 text-sm sm:text-base mb-3 sm:mb-4 uppercase tracking-wide">
+                      <Link
+                        href={`/categorias/${categoria.id}`}
+                        className="block font-semibold text-gray-800 hover:text-blue-600 text-sm sm:text-base mb-3 sm:mb-4 uppercase tracking-wide transition-colors duration-300"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
                         {categoria.nome}
-                      </p>
+                      </Link>
                       <div className="space-y-0.5 sm:space-y-1">
                         {categoria
                           .subcategorias!.slice(0, 8)
                           .map((subcategoria) => (
                             <Link
                               key={subcategoria.id}
-                              href={`/produtos?categoria=${categoria.id}&subcategoria=${subcategoria.id}`}
+                              href={`/subcategorias/${subcategoria.id}`}
                               className="block py-1.5 sm:py-2 px-3 sm:px-4 text-sm sm:text-base text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-all duration-200"
                               onClick={() => setIsMobileMenuOpen(false)}
                             >
@@ -342,7 +442,7 @@ export default function Header() {
                           ))}
                         {categoria.subcategorias!.length > 8 && (
                           <Link
-                            href={`/produtos?categoria=${categoria.id}`}
+                            href={`/categorias/${categoria.id}`}
                             className="block py-1.5 sm:py-2 px-3 sm:px-4 text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium hover:bg-blue-50 rounded-lg transition-all duration-200"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
@@ -358,6 +458,124 @@ export default function Header() {
           </div>
         </div>
       )}
+
+      {/* Autocomplete Sugestões - Desktop */}
+      {showSuggestions && suggestions.length > 0 && (
+        <ul className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-72 overflow-auto">
+          {suggestions.map((produto, idx) => (
+            <li
+              key={produto.id}
+              className={`flex items-center px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors ${
+                selectedSuggestion === idx ? "bg-blue-100" : ""
+              }`}
+              onMouseDown={() => handleSuggestionClick(produto)}
+            >
+              {produto.imagem_principal && (
+                <img
+                  src={produto.imagem_principal}
+                  alt={produto.nome}
+                  className="w-8 h-8 rounded mr-3 object-cover"
+                />
+              )}
+              <div className="flex flex-col flex-1 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-gray-800 font-medium truncate">
+                    {produto.nome}
+                  </span>
+                  {produto.promocao_mes && (
+                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded ml-1">
+                      Promoção
+                    </span>
+                  )}
+                  {produto.novidade && (
+                    <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded ml-1">
+                      Novidade
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {produto.promocao_mes && produto.preco_promocao ? (
+                    <>
+                      <span className="text-blue-600 font-bold text-sm">
+                        R$ {produto.preco_promocao.toFixed(2)}
+                      </span>
+                      <span className="text-gray-400 text-xs line-through">
+                        R$ {produto.preco.toFixed(2)}
+                      </span>
+                    </>
+                  ) : produto.preco ? (
+                    <span className="text-gray-700 text-sm font-semibold">
+                      R$ {produto.preco.toFixed(2)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Autocomplete Sugestões - Mobile */}
+      {showSuggestions && suggestions.length > 0 && (
+        <ul className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-72 overflow-auto">
+          {suggestions.map((produto, idx) => (
+            <li
+              key={produto.id}
+              className={`flex items-center px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors ${
+                selectedSuggestion === idx ? "bg-blue-100" : ""
+              }`}
+              onMouseDown={() => handleSuggestionClick(produto)}
+            >
+              {produto.imagem_principal && (
+                <img
+                  src={produto.imagem_principal}
+                  alt={produto.nome}
+                  className="w-8 h-8 rounded mr-3 object-cover"
+                />
+              )}
+              <div className="flex flex-col flex-1 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-gray-800 font-medium truncate">
+                    {produto.nome}
+                  </span>
+                  {produto.promocao_mes && (
+                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded ml-1">
+                      Promoção
+                    </span>
+                  )}
+                  {produto.novidade && (
+                    <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded ml-1">
+                      Novidade
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {produto.promocao_mes && produto.preco_promocao ? (
+                    <>
+                      <span className="text-blue-600 font-bold text-sm">
+                        R$ {produto.preco_promocao.toFixed(2)}
+                      </span>
+                      <span className="text-gray-400 text-xs line-through">
+                        R$ {produto.preco.toFixed(2)}
+                      </span>
+                    </>
+                  ) : produto.preco ? (
+                    <span className="text-gray-700 text-sm font-semibold">
+                      R$ {produto.preco.toFixed(2)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Popup de Lojas e Vendedores */}
+      <LojaVendedorPopup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+      />
     </header>
   );
 }

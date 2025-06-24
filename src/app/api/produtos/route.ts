@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const tipo_tinta = searchParams.get("tipo_tinta");
     const tipo_eletrico = searchParams.get("tipo_eletrico");
     const status = searchParams.get("status") || "ativo";
+    const busca = searchParams.get("busca"); // Novo parâmetro de busca
 
     // Parâmetros de paginação
     const page = parseInt(searchParams.get("page") || "1");
@@ -55,6 +56,11 @@ export async function GET(request: NextRequest) {
 
     if (tipo_eletrico === "true") {
       query = query.eq("tipo_eletrico", true);
+    }
+
+    if (busca) {
+      // Busca por nome ou descrição (case-insensitive)
+      query = query.or(`nome.ilike.%${busca}%,descricao.ilike.%${busca}%`);
     }
 
     if (subcategoria) {

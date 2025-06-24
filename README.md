@@ -1,25 +1,25 @@
-# 🚀 Projeto Next.js + TailwindCSS
+# 🏗️ TurattiMT - E-commerce de Materiais de Construção
 
-Uma aplicação moderna e responsiva construída com Next.js 15, TailwindCSS 4 e TypeScript.
+Site moderno e responsivo para venda de materiais de construção, desenvolvido com Next.js 15, TypeScript e TailwindCSS.
 
-## ✨ Características
+## ✨ Funcionalidades
 
-- **⚡ Next.js 15** - Framework React com App Router
-- **🎨 TailwindCSS 4** - CSS utilitário moderno
-- **📘 TypeScript** - Tipagem estática
-- **🎯 ESLint** - Linting de código
-- **📱 Responsivo** - Design adaptável para todos os dispositivos
-- **🌙 Modo Escuro** - Suporte automático ao tema escuro
-- **♿ Acessível** - Práticas de acessibilidade implementadas
-- **🔥 Performance** - Otimizado para velocidade
+- **🛒 E-commerce Completo** - Catálogo de produtos com categorias
+- **🔍 Busca Inteligente** - Autocomplete com sugestões em tempo real
+- **🎠 Carrosséis Interativos** - Ofertas, novidades, tintas e elétricos
+- **📱 Design Responsivo** - Otimizado para todos os dispositivos
+- **⚡ Performance** - Carregamento rápido e otimizado
+- **🎨 Animações Fluidas** - Transições suaves e micro-interações
+- **🔒 Segurança** - Headers de segurança e validação de dados
 
 ## 🛠️ Tecnologias Utilizadas
 
-- [Next.js](https://nextjs.org/) - Framework React
-- [TailwindCSS](https://tailwindcss.com/) - Framework CSS
-- [TypeScript](https://www.typescriptlang.org/) - Linguagem de programação
+- [Next.js 15](https://nextjs.org/) - Framework React com App Router
+- [TypeScript](https://www.typescriptlang.org/) - Tipagem estática
+- [TailwindCSS 4](https://tailwindcss.com/) - Framework CSS utilitário
+- [Supabase](https://supabase.com/) - Backend as a Service
 - [Heroicons](https://heroicons.com/) - Biblioteca de ícones
-- [ESLint](https://eslint.org/) - Linter de código
+- [Vercel](https://vercel.com/) - Plataforma de deploy
 
 ## 🚀 Como Executar
 
@@ -34,30 +34,35 @@ Uma aplicação moderna e responsiva construída com Next.js 15, TailwindCSS 4 e
 
    ```bash
    git clone <url-do-repositorio>
-   cd web01
+   cd turattimt
    ```
 
 2. **Instale as dependências**
 
    ```bash
    npm install
-   # ou
-   yarn install
-   # ou
-   pnpm install
    ```
 
-3. **Execute o servidor de desenvolvimento**
+3. **Configure as variáveis de ambiente**
+
+   ```bash
+   cp env.example .env.local
+   ```
+
+   Edite o arquivo `.env.local` com suas credenciais do Supabase:
+
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
+   ```
+
+4. **Execute o servidor de desenvolvimento**
 
    ```bash
    npm run dev
-   # ou
-   yarn dev
-   # ou
-   pnpm dev
    ```
 
-4. **Abra no navegador**
+5. **Abra no navegador**
 
    Acesse [http://localhost:3000](http://localhost:3000) para ver a aplicação.
 

@@ -42,16 +42,13 @@ interface Produto {
 
 async function getProduto(id: string): Promise<Produto | null> {
   try {
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/produtos/${id}`,
-      {
-        cache: "no-store",
-      }
-    );
+    // Usar URL relativa para funcionar tanto em desenvolvimento quanto em produção
+    const response = await fetch(`/api/produtos/${id}`, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
+      console.error(`Erro na API: ${response.status} ${response.statusText}`);
       return null;
     }
 

@@ -72,14 +72,9 @@ const abreviarNomeProduto = (nome: string): string => {
 
 async function getCategoria(id: string): Promise<Categoria | null> {
   try {
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/categorias/${id}`,
-      {
-        cache: "no-store",
-      }
-    );
+    const response = await fetch(`/api/categorias/${id}`, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       console.error(`Erro HTTP ${response.status}: ${response.statusText}`);
@@ -96,7 +91,7 @@ async function getCategoria(id: string): Promise<Categoria | null> {
       error.message.includes("Failed to fetch")
     ) {
       console.error(
-        "Erro de conexão: Verifique se o servidor está rodando na porta 3000"
+        "Erro de conexão: Verifique se o servidor da API está funcionando"
       );
     }
     return null;
@@ -106,15 +101,16 @@ async function getCategoria(id: string): Promise<Categoria | null> {
 async function getSubcategorias(categoriaId: string): Promise<Subcategoria[]> {
   try {
     const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/subcategorias?categoria=${categoriaId}`,
+      `/api/subcategorias?categoria=${categoriaId}`,
       {
         cache: "no-store",
       }
     );
 
     if (!response.ok) {
+      console.error(
+        `Erro na API subcategorias: ${response.status} ${response.statusText}`
+      );
       throw new Error("Erro ao buscar subcategorias");
     }
 
@@ -131,15 +127,16 @@ async function getProdutosPorCategoria(
 ): Promise<Produto[]> {
   try {
     const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/produtos?categoria=${categoriaId}&limit=100`,
+      `/api/produtos?categoria=${categoriaId}&limit=100`,
       {
         cache: "no-store",
       }
     );
 
     if (!response.ok) {
+      console.error(
+        `Erro na API produtos: ${response.status} ${response.statusText}`
+      );
       throw new Error("Erro ao buscar produtos");
     }
 

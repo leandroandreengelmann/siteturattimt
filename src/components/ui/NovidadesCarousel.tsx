@@ -144,16 +144,61 @@ export default function NovidadesCarousel() {
     const fetchProdutos = async () => {
       try {
         setIsLoading(true);
+        console.log("Iniciando busca de produtos novidades...");
 
         // Buscar produtos que tenham novidade=true
         const response = await fetch("/api/produtos?novidade=true&limit=20");
+        console.log(
+          "Resposta da API novidades:",
+          response.status,
+          response.statusText
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log("Dados de novidades recebidos:", data);
 
         if (data.produtos && data.produtos.length > 0) {
           setProdutos(data.produtos);
+          console.log(`${data.produtos.length} produtos novidades carregados`);
+        } else {
+          console.log("Nenhum produto novidade encontrado");
+          // Se não há produtos novidade, buscar produtos normais
+          const fallbackResponse = await fetch("/api/produtos?limit=20");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.produtos && fallbackData.produtos.length > 0) {
+              setProdutos(fallbackData.produtos.slice(0, 10)); // Limitar a 10 produtos
+              console.log(
+                `Usando ${
+                  fallbackData.produtos.slice(0, 10).length
+                } produtos normais como fallback para novidades`
+              );
+            }
+          }
         }
       } catch (error) {
         console.error("Erro ao buscar produtos novidades:", error);
+        // Fallback: tentar buscar produtos normais
+        try {
+          const fallbackResponse = await fetch("/api/produtos?limit=20");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.produtos && fallbackData.produtos.length > 0) {
+              setProdutos(fallbackData.produtos.slice(0, 10));
+              console.log(
+                `Fallback novidades: ${
+                  fallbackData.produtos.slice(0, 10).length
+                } produtos normais carregados`
+              );
+            }
+          }
+        } catch (fallbackError) {
+          console.error("Erro no fallback novidades:", fallbackError);
+        }
       } finally {
         setIsLoading(false);
       }

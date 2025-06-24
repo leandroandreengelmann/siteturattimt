@@ -69,16 +69,14 @@ const abreviarNomeProduto = (nome: string): string => {
 
 async function getSubcategoria(id: string): Promise<Subcategoria | null> {
   try {
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/subcategorias/${id}`,
-      {
-        cache: "no-store",
-      }
-    );
+    const response = await fetch(`/api/subcategorias/${id}`, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
+      console.error(
+        `Erro na API subcategorias: ${response.status} ${response.statusText}`
+      );
       return null;
     }
 
@@ -93,15 +91,16 @@ async function getSubcategoria(id: string): Promise<Subcategoria | null> {
 async function getProdutos(subcategoriaId: string): Promise<Produto[]> {
   try {
     const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/produtos?subcategoria=${subcategoriaId}&status=ativo&limit=100`,
+      `/api/produtos?subcategoria=${subcategoriaId}&status=ativo&limit=100`,
       {
         cache: "no-store",
       }
     );
 
     if (!response.ok) {
+      console.error(
+        `Erro na API produtos: ${response.status} ${response.statusText}`
+      );
       throw new Error("Erro ao buscar produtos");
     }
 

@@ -151,16 +151,62 @@ export default function EletricosCarousel() {
     const fetchProdutos = async () => {
       try {
         setIsLoading(true);
+        console.log("Iniciando busca de produtos elétricos...");
+
         const response = await fetch(
           "/api/produtos?tipo_eletrico=true&limit=20"
         );
+        console.log(
+          "Resposta da API elétricos:",
+          response.status,
+          response.statusText
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log("Dados de elétricos recebidos:", data);
 
         if (data.produtos && data.produtos.length > 0) {
           setProdutos(data.produtos);
+          console.log(`${data.produtos.length} produtos elétricos carregados`);
+        } else {
+          console.log("Nenhum produto elétrico encontrado");
+          // Fallback: buscar produtos normais
+          const fallbackResponse = await fetch("/api/produtos?limit=20");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.produtos && fallbackData.produtos.length > 0) {
+              setProdutos(fallbackData.produtos.slice(0, 10));
+              console.log(
+                `Fallback elétricos: ${
+                  fallbackData.produtos.slice(0, 10).length
+                } produtos normais carregados`
+              );
+            }
+          }
         }
       } catch (error) {
         console.error("Erro ao buscar produtos elétricos:", error);
+        // Fallback: tentar buscar produtos normais
+        try {
+          const fallbackResponse = await fetch("/api/produtos?limit=20");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.produtos && fallbackData.produtos.length > 0) {
+              setProdutos(fallbackData.produtos.slice(0, 10));
+              console.log(
+                `Fallback elétricos: ${
+                  fallbackData.produtos.slice(0, 10).length
+                } produtos normais carregados`
+              );
+            }
+          }
+        } catch (fallbackError) {
+          console.error("Erro no fallback elétricos:", fallbackError);
+        }
       } finally {
         setIsLoading(false);
       }

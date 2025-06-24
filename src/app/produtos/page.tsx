@@ -84,14 +84,9 @@ async function getProdutos(searchParams: URLSearchParams): Promise<Produto[]> {
 
     params.set("limit", "50");
 
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/produtos?${params.toString()}`,
-      {
-        cache: "no-store",
-      }
-    );
+    const response = await fetch(`/api/produtos?${params.toString()}`, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       throw new Error("Erro ao buscar produtos");
@@ -107,14 +102,9 @@ async function getProdutos(searchParams: URLSearchParams): Promise<Produto[]> {
 
 async function getCategoria(id: string): Promise<Categoria | null> {
   try {
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/categorias/${id}`,
-      {
-        cache: "no-store",
-      }
-    );
+    const response = await fetch(`/api/categorias/${id}`, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       return null;

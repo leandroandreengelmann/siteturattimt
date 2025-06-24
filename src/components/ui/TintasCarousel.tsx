@@ -162,33 +162,73 @@ export default function TintasCarousel() {
     const fetchProdutos = async () => {
       try {
         setIsLoading(true);
+        console.log("Iniciando busca de produtos de tinta...");
 
         // Buscar produtos que tenham tipo_tinta=true OU que sejam de subcategorias relacionadas a tinta
         const response = await fetch("/api/produtos?tipo_tinta=true&limit=20");
+        console.log(
+          "Resposta da API tintas:",
+          response.status,
+          response.statusText
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log("Dados de tintas recebidos:", data);
 
         if (data.produtos && data.produtos.length > 0) {
           setProdutos(data.produtos);
+          console.log(`${data.produtos.length} produtos de tinta carregados`);
         } else {
+          console.log(
+            "Nenhum produto com tipo_tinta encontrado, buscando por nome..."
+          );
           // Se não houver produtos com tipo_tinta, buscar por nome que contenha "tinta"
           const responseNome = await fetch("/api/produtos?limit=50");
-          const dataNome = await responseNome.json();
+          if (responseNome.ok) {
+            const dataNome = await responseNome.json();
 
-          if (dataNome.produtos) {
-            const produtosTinta = dataNome.produtos.filter(
-              (produto: Produto) =>
-                produto.nome.toLowerCase().includes("tinta") ||
-                produto.nome.toLowerCase().includes("verniz") ||
-                produto.nome.toLowerCase().includes("esmalte") ||
-                produto.nome.toLowerCase().includes("primer") ||
-                produto.nome.toLowerCase().includes("pintura")
-            );
+            if (dataNome.produtos) {
+              const produtosTinta = dataNome.produtos.filter(
+                (produto: Produto) =>
+                  produto.nome.toLowerCase().includes("tinta") ||
+                  produto.nome.toLowerCase().includes("verniz") ||
+                  produto.nome.toLowerCase().includes("esmalte") ||
+                  produto.nome.toLowerCase().includes("primer") ||
+                  produto.nome.toLowerCase().includes("pintura")
+              );
 
-            setProdutos(produtosTinta.slice(0, 20));
+              setProdutos(produtosTinta.slice(0, 20));
+              console.log(
+                `${
+                  produtosTinta.slice(0, 20).length
+                } produtos de tinta encontrados por nome`
+              );
+            }
           }
         }
       } catch (error) {
         console.error("Erro ao buscar produtos de tinta:", error);
+        // Fallback: buscar produtos normais como última opção
+        try {
+          const fallbackResponse = await fetch("/api/produtos?limit=20");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.produtos && fallbackData.produtos.length > 0) {
+              setProdutos(fallbackData.produtos.slice(0, 10));
+              console.log(
+                `Fallback tintas: ${
+                  fallbackData.produtos.slice(0, 10).length
+                } produtos normais carregados`
+              );
+            }
+          }
+        } catch (fallbackError) {
+          console.error("Erro no fallback tintas:", fallbackError);
+        }
       } finally {
         setIsLoading(false);
       }

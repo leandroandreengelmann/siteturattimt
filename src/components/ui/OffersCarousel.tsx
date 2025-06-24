@@ -179,14 +179,58 @@ export default function OffersCarousel() {
     const fetchProdutos = async () => {
       try {
         setIsLoading(true);
+        console.log("Iniciando busca de produtos em promoção...");
+
         const response = await fetch("/api/produtos?promocao=true&limit=20");
+        console.log("Resposta da API:", response.status, response.statusText);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log("Dados recebidos:", data);
 
         if (data.produtos && data.produtos.length > 0) {
           setProdutos(data.produtos);
+          console.log(
+            `${data.produtos.length} produtos em promoção carregados`
+          );
+        } else {
+          console.log("Nenhum produto em promoção encontrado");
+          // Se não há produtos em promoção, buscar produtos normais
+          const fallbackResponse = await fetch("/api/produtos?limit=20");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.produtos && fallbackData.produtos.length > 0) {
+              setProdutos(fallbackData.produtos.slice(0, 10)); // Limitar a 10 produtos
+              console.log(
+                `Usando ${
+                  fallbackData.produtos.slice(0, 10).length
+                } produtos normais como fallback`
+              );
+            }
+          }
         }
       } catch (error) {
         console.error("Erro ao buscar produtos em promoção:", error);
+        // Fallback: tentar buscar produtos normais
+        try {
+          const fallbackResponse = await fetch("/api/produtos?limit=20");
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.produtos && fallbackData.produtos.length > 0) {
+              setProdutos(fallbackData.produtos.slice(0, 10));
+              console.log(
+                `Fallback: ${
+                  fallbackData.produtos.slice(0, 10).length
+                } produtos normais carregados`
+              );
+            }
+          }
+        } catch (fallbackError) {
+          console.error("Erro no fallback:", fallbackError);
+        }
       } finally {
         setIsLoading(false);
       }

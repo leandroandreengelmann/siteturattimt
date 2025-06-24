@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Configurações para produção na Vercel
-  output: "standalone",
-
   // Configurações de imagem para Supabase
   images: {
     remotePatterns: [
@@ -18,7 +15,7 @@ const nextConfig: NextConfig = {
 
   // Configurações de build otimizadas
   experimental: {
-    optimizeCss: true,
+    // optimizeCss removido temporariamente devido a conflito com critters
   },
 
   // Configurações de headers para performance
